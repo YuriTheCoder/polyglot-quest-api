@@ -1,0 +1,154 @@
+name: Generate SDKs and Documentation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  generate-sdks:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+    
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+    
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: '5.9'
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+    
+    - name: Install Protocol Buffers Compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y protobuf-compiler
+        protoc --version
+    
+    - name: Install Python gRPC tools
+      run: |
+        pip install grpcio-tools
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Create directories
+      run: |
+        mkdir -p clients/{javascript,python,java,go,csharp,rust,kotlin,swift,php}
+        mkdir -p clients/grpc/{javascript,python,java,go,csharp}
+        mkdir -p docs
+        mkdir -p collections
+    
+    - name: Generate OpenAPI specification
+      run: npm run spec:generate
+    
+    - name: Generate REST SDKs
+      run: |
+        npm run sdk:generate:js
+        npm run sdk:generate:python
+        npm run sdk:generate:java
+        npm run sdk:generate:go
+        npm run sdk:generate:csharp
+        npm run sdk:generate:rust
+        npm run sdk:generate:kotlin
+        npm run sdk:generate:swift
+        npm run sdk:generate:php
+    
+    - name: Generate gRPC clients
+      run: |
+        npm run grpc:generate:js
+        npm run grpc:generate:python
+        npm run grpc:generate:go
+        npm run grpc:generate:java
+        npm run grpc:generate:csharp
+    
+    - name: Generate Postman collection
+      run: npm run postman:generate
+    
+    - name: Generate ReDoc documentation
+      run: npm run docs:redoc
+    
+    - name: Test JavaScript SDK
+      run: |
+        cd clients/javascript
+        npm install
+        npm test
+    
+    - name: Test Python SDK
+      run: |
+        cd clients/python
+        pip install -r requirements.txt
+        python -m pytest
+    
+    - name: Test Go SDK
+      run: |
+        cd clients/go
+        go mod tidy
+        go test ./...
+    
+    - name: Validate generated files
+      run: |
+        echo "Checking generated files..."
+        ls -la clients/
+        ls -la clients/grpc/
+        ls -la docs/
+        echo "OpenAPI spec size: $(wc -l < openapi.json) lines"
+        echo "ReDoc documentation generated: $(ls -la docs/redoc.html)"
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: generated-sdks-and-docs
+        path: |
+          clients/
+          docs/
+          openapi.json
+          collections/
+    
+    - name: Commit generated files
+      if: github.event_name == 'push'
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "chore: Auto-generate SDKs, gRPC clients and documentation [skip ci]"
+        file_pattern: clients/ docs/ openapi.json collections/ 

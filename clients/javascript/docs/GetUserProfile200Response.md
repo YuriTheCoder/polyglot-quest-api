@@ -1,0 +1,10 @@
+# GamifiedTaskManagementApi.GetUserProfile200Response
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**success** | **Boolean** |  | [optional] 
+**data** | [**GetUserProfile200ResponseData**](GetUserProfile200ResponseData.md) |  | [optional] 
+
+

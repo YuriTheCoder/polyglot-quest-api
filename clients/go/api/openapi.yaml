@@ -1,0 +1,2969 @@
+openapi: 3.0.0
+info:
+  description: "API REST gamificada para gerenciamento de tarefas com IA, XP, levels\
+    \ e sistema de recompensas"
+  title: Gamified Task Management API
+  version: 1.0.0
+servers:
+- description: Servidor de Desenvolvimento
+  url: http://localhost:3000
+security:
+- bearerAuth: []
+tags:
+- description: "Sistema de gamificação com XP, levels, badges e leaderboard"
+  name: Gamification
+paths:
+  /api/auth/register:
+    post:
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerUser_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/registerUser_201_response'
+          description: Usuário registrado com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Dados inválidos ou usuário já existe
+      security: []
+      summary: Registrar novo usuário
+      tags:
+      - Auth
+  /api/auth/login:
+    post:
+      operationId: loginUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginUser_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loginUser_200_response'
+          description: Login realizado com sucesso
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Credenciais inválidas
+      security: []
+      summary: Login de usuário
+      tags:
+      - Auth
+  /api/auth/profile:
+    get:
+      operationId: getUserProfile
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getUserProfile_200_response'
+          description: Perfil do usuário
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Token não fornecido ou inválido
+      security:
+      - bearerAuth: []
+      summary: Obter perfil do usuário logado
+      tags:
+      - Auth
+    put:
+      operationId: updateUserProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateUserProfile_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateUserProfile_200_response'
+          description: Perfil atualizado com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Email já está em uso
+      security:
+      - bearerAuth: []
+      summary: Atualizar perfil do usuário
+      tags:
+      - Auth
+  /api/auth/change-password:
+    put:
+      operationId: changeUserPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/changeUserPassword_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/changeUserPassword_200_response'
+          description: Senha alterada com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Senha atual incorreta ou nova senha inválida
+      security:
+      - bearerAuth: []
+      summary: Alterar senha do usuário
+      tags:
+      - Auth
+  /api/auth/logout:
+    post:
+      operationId: logoutUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/logoutUser_200_response'
+          description: Logout realizado com sucesso
+      security:
+      - bearerAuth: []
+      summary: Logout do usuário
+      tags:
+      - Auth
+  /api/leaderboard:
+    get:
+      operationId: getLeaderboard
+      parameters:
+      - description: Número de usuários no ranking
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 50
+          minimum: 1
+          type: integer
+        style: form
+      - description: Período do ranking
+        explode: true
+        in: query
+        name: period
+        required: false
+        schema:
+          default: all
+          enum:
+          - all
+          - weekly
+          - monthly
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getLeaderboard_200_response'
+          description: Leaderboard dos top usuários
+      summary: Obter leaderboard público
+      tags:
+      - Gamification
+  /api/gamification/dashboard:
+    get:
+      operationId: getGamificationDashboard
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGamificationDashboard_200_response'
+          description: Dashboard completo do usuário
+      security:
+      - bearerAuth: []
+      summary: Dashboard de gamificação do usuário
+      tags:
+      - Gamification
+  /api/gamification/badges:
+    get:
+      operationId: getBadges
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getBadges_200_response'
+          description: Lista de badges
+      security:
+      - bearerAuth: []
+      summary: Listar badges disponíveis e conquistados
+      tags:
+      - Gamification
+  /api/gamification/preferences:
+    put:
+      operationId: updateGamificationPreferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateGamificationPreferences_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateGamificationPreferences_200_response'
+          description: Preferências atualizadas
+      security:
+      - bearerAuth: []
+      summary: Atualizar preferências de gamificação
+      tags:
+      - Gamification
+  /api/gamification/share:
+    post:
+      operationId: shareMilestone
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shareMilestone_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shareMilestone_200_response'
+          description: Conquista compartilhada
+      security:
+      - bearerAuth: []
+      summary: Compartilhar conquista manualmente
+      tags:
+      - Gamification
+  /api/gamification/global-stats:
+    get:
+      operationId: getGlobalStats
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getGlobalStats_200_response'
+          description: Estatísticas globais
+      summary: Estatísticas globais da plataforma
+      tags:
+      - Gamification
+  /api/webhooks/share:
+    post:
+      operationId: processShareWebhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/processShareWebhook_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/processShareWebhook_200_response'
+          description: Webhook processado
+      summary: Webhook para processar compartilhamentos
+      tags:
+      - Webhooks
+  /api/tasks:
+    get:
+      operationId: listTasks
+      parameters:
+      - description: Filtrar por status
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          enum:
+          - pending
+          - in_progress
+          - completed
+          type: string
+        style: form
+      - description: Filtrar por prioridade
+        explode: true
+        in: query
+        name: priority
+        required: false
+        schema:
+          enum:
+          - low
+          - medium
+          - high
+          type: string
+        style: form
+      - description: Número da página
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Itens por página
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      - description: Campo para ordenação
+        explode: true
+        in: query
+        name: sortBy
+        required: false
+        schema:
+          default: createdAt
+          enum:
+          - createdAt
+          - updatedAt
+          - dueDate
+          - priority
+          - title
+          type: string
+        style: form
+      - description: Ordem da classificação
+        explode: true
+        in: query
+        name: sortOrder
+        required: false
+        schema:
+          default: desc
+          enum:
+          - asc
+          - desc
+          type: string
+        style: form
+      - description: Buscar no título e descrição
+        explode: true
+        in: query
+        name: search
+        required: false
+        schema:
+          maxLength: 100
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listTasks_200_response'
+          description: Lista de tarefas
+      security:
+      - bearerAuth: []
+      summary: Get all tasks for the logged-in user
+      tags:
+      - Tasks
+    post:
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createTask_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createTask_201_response'
+          description: Tarefa criada com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Dados inválidos
+      security:
+      - bearerAuth: []
+      summary: Create a new task
+      tags:
+      - Tasks
+  /api/tasks/stats:
+    get:
+      operationId: getTaskStats
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTaskStats_200_response'
+          description: Estatísticas das tarefas
+      security:
+      - bearerAuth: []
+      summary: Get task statistics
+      tags:
+      - Tasks
+  /api/tasks/status/{status}:
+    get:
+      operationId: listTasksByStatus
+      parameters:
+      - description: Status das tarefas
+        explode: false
+        in: path
+        name: status
+        required: true
+        schema:
+          enum:
+          - pending
+          - in_progress
+          - completed
+          type: string
+        style: simple
+      - description: Número da página
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Itens por página
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listTasksByStatus_200_response'
+          description: Tarefas filtradas por status
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Status inválido
+      security:
+      - bearerAuth: []
+      summary: Get tasks by status
+      tags:
+      - Tasks
+  /api/tasks/{id}:
+    delete:
+      operationId: deleteTask
+      parameters:
+      - description: ID da tarefa
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deleteTask_200_response'
+          description: Tarefa deletada com sucesso
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Tarefa não encontrada
+      security:
+      - bearerAuth: []
+      summary: Delete a task
+      tags:
+      - Tasks
+    get:
+      operationId: getTaskById
+      parameters:
+      - description: ID da tarefa
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getTaskById_200_response'
+          description: Detalhes da tarefa
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Tarefa não encontrada
+      security:
+      - bearerAuth: []
+      summary: Get a specific task by ID
+      tags:
+      - Tasks
+    put:
+      operationId: updateTask
+      parameters:
+      - description: ID da tarefa
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateTask_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateTask_200_response'
+          description: Tarefa atualizada com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Dados inválidos
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Tarefa não encontrada
+      security:
+      - bearerAuth: []
+      summary: Update a task
+      tags:
+      - Tasks
+  /api/tasks/{id}/complete:
+    patch:
+      operationId: completeTask
+      parameters:
+      - description: ID da tarefa
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/completeTask_200_response'
+          description: Tarefa marcada como concluída
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Tarefa já está concluída
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Tarefa não encontrada
+      security:
+      - bearerAuth: []
+      summary: Mark a task as complete
+      tags:
+      - Tasks
+  /api/tasks/story:
+    post:
+      operationId: createStoryFromTasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createStoryFromTasks_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createStoryFromTasks_201_response'
+          description: História épica gerada com sucesso
+      security:
+      - bearerAuth: []
+      summary: Generate a story from tasks
+      tags:
+      - Gamification
+  /api/tasks/{id}/complete-quest:
+    post:
+      operationId: completeQuest
+      parameters:
+      - description: ID da tarefa/quest
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/completeQuest_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/completeQuest_200_response'
+          description: Quest completada com sucesso
+      security:
+      - bearerAuth: []
+      summary: Complete a quest (task) and get XP
+      tags:
+      - Gamification
+  /api/tasks/stories:
+    get:
+      operationId: listStories
+      parameters:
+      - description: Filtrar histórias ativas
+        explode: true
+        in: query
+        name: active
+        required: false
+        schema:
+          default: "true"
+          enum:
+          - "true"
+          - "false"
+          type: string
+        style: form
+      - description: Limite de resultados
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 50
+          minimum: 1
+          type: integer
+        style: form
+      - description: Página
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listStories_200_response'
+          description: Lista de histórias
+      security:
+      - bearerAuth: []
+      summary: List all stories for the user
+      tags:
+      - Gamification
+  /api/tasks/stories/{id}:
+    get:
+      operationId: getStoryById
+      parameters:
+      - description: ID da história
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getStoryById_200_response'
+          description: Detalhes da história
+      security:
+      - bearerAuth: []
+      summary: Get a specific story by ID
+      tags:
+      - Gamification
+  /api/users/stats:
+    get:
+      operationId: getUserStats
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getUserStats_200_response'
+          description: Estatísticas do sistema
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+      summary: Obter estatísticas gerais do sistema (Admin only)
+      tags:
+      - Users
+  /api/users:
+    get:
+      operationId: getAllUsers
+      parameters:
+      - description: Número da página
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Itens por página
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      - description: Buscar por nome ou email
+        explode: true
+        in: query
+        name: search
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filtrar por papel
+        explode: true
+        in: query
+        name: role
+        required: false
+        schema:
+          enum:
+          - user
+          - admin
+          type: string
+        style: form
+      - description: Filtrar por status ativo
+        explode: true
+        in: query
+        name: isActive
+        required: false
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getAllUsers_200_response'
+          description: Lista de usuários
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+      summary: Listar todos os usuários (Admin only)
+      tags:
+      - Users
+  /api/users/{id}:
+    delete:
+      operationId: deleteUser
+      parameters:
+      - description: ID do usuário
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/deleteUser_200_response'
+          description: Usuário deletado com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Não é possível deletar própria conta
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Usuário não encontrado
+      summary: Deletar usuário (Admin only)
+      tags:
+      - Users
+    get:
+      operationId: getUserById
+      parameters:
+      - description: ID do usuário
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getUserById_200_response'
+          description: Detalhes do usuário
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Usuário não encontrado
+      summary: Obter usuário específico (Admin only)
+      tags:
+      - Users
+    put:
+      operationId: updateUser
+      parameters:
+      - description: ID do usuário
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateUser_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/updateUser_200_response'
+          description: Usuário atualizado com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Email já está em uso
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Usuário não encontrado
+      summary: Atualizar usuário (Admin only)
+      tags:
+      - Users
+  /api/users/{id}/toggle-status:
+    patch:
+      operationId: toggleUserStatus
+      parameters:
+      - description: ID do usuário
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/toggleUserStatus_200_response'
+          description: Status do usuário alterado com sucesso
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Não é possível desativar própria conta
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Acesso negado - privilégios de admin necessários
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Usuário não encontrado
+      summary: Ativar/Desativar usuário (Admin only)
+      tags:
+      - Users
+components:
+  schemas:
+    User:
+      example:
+        gamification:
+          totalXP: 450
+          level: 5
+        lastLogin: 2000-01-23T04:56:07.000+00:00
+        role: user
+        name: Yuri Dev
+        id: 64a1b2c3d4e5f6789abcdef0
+        isActive: true
+        email: yuri.dev@example.com
+      properties:
+        id:
+          example: 64a1b2c3d4e5f6789abcdef0
+          type: string
+        name:
+          example: Yuri Dev
+          type: string
+        email:
+          example: yuri.dev@example.com
+          type: string
+        role:
+          enum:
+          - user
+          - admin
+          example: user
+          type: string
+        isActive:
+          example: true
+          type: boolean
+        lastLogin:
+          format: date-time
+          type: string
+        gamification:
+          $ref: '#/components/schemas/User_gamification'
+      type: object
+    Task:
+      example:
+        id: 64a1b2c3d4e5f6789abcdef1
+        title: Implementar Story-Mode
+        priority: low
+        userId: 64a1b2c3d4e5f6789abcdef0
+        status: pending
+      properties:
+        id:
+          example: 64a1b2c3d4e5f6789abcdef1
+          type: string
+        title:
+          example: Implementar Story-Mode
+          type: string
+        status:
+          enum:
+          - pending
+          - in_progress
+          - completed
+          type: string
+        priority:
+          enum:
+          - low
+          - medium
+          - high
+          type: string
+        userId:
+          example: 64a1b2c3d4e5f6789abcdef0
+          type: string
+      type: object
+    Story:
+      example:
+        progress: 50
+        theme: medieval
+        id: 64a1b2c3d4e5f6789abcdef2
+        title: A Batalha contra o Bug Monstruoso
+        story: "Nas profundezas do código, um bug terrível despertou..."
+      properties:
+        id:
+          example: 64a1b2c3d4e5f6789abcdef2
+          type: string
+        title:
+          example: A Batalha contra o Bug Monstruoso
+          type: string
+        story:
+          example: "Nas profundezas do código, um bug terrível despertou..."
+          type: string
+        theme:
+          enum:
+          - medieval
+          - scifi
+          - modern
+          - fantasy
+          type: string
+        progress:
+          example: 50
+          type: number
+      type: object
+    Error:
+      example:
+        success: false
+        message: Erro de validação
+      properties:
+        success:
+          example: false
+          type: boolean
+        message:
+          example: Erro de validação
+          type: string
+      type: object
+    registerUser_request:
+      properties:
+        name:
+          example: João Silva
+          maxLength: 50
+          minLength: 2
+          type: string
+        email:
+          example: joao@email.com
+          format: email
+          type: string
+        password:
+          example: "123456"
+          minLength: 6
+          type: string
+        role:
+          default: user
+          enum:
+          - user
+          - admin
+          example: user
+          type: string
+      required:
+      - email
+      - name
+      - password
+      type: object
+    registerUser_201_response_data:
+      example:
+        user:
+          gamification:
+            totalXP: 450
+            level: 5
+          lastLogin: 2000-01-23T04:56:07.000+00:00
+          role: user
+          name: Yuri Dev
+          id: 64a1b2c3d4e5f6789abcdef0
+          isActive: true
+          email: yuri.dev@example.com
+        token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          type: string
+      type: object
+    registerUser_201_response:
+      example:
+        data:
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+          token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        success: true
+        message: Usuário registrado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Usuário registrado com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/registerUser_201_response_data'
+      type: object
+    loginUser_request:
+      properties:
+        email:
+          example: joao@email.com
+          format: email
+          type: string
+        password:
+          example: "123456"
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    loginUser_200_response:
+      example:
+        data:
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+          token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        success: true
+        message: Login realizado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Login realizado com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/registerUser_201_response_data'
+      type: object
+    getUserProfile_200_response_data:
+      example:
+        user:
+          gamification:
+            totalXP: 450
+            level: 5
+          lastLogin: 2000-01-23T04:56:07.000+00:00
+          role: user
+          name: Yuri Dev
+          id: 64a1b2c3d4e5f6789abcdef0
+          isActive: true
+          email: yuri.dev@example.com
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+      type: object
+    getUserProfile_200_response:
+      example:
+        data:
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getUserProfile_200_response_data'
+      type: object
+    updateUserProfile_request:
+      properties:
+        name:
+          example: João Silva Santos
+          maxLength: 50
+          minLength: 2
+          type: string
+        email:
+          example: joao.santos@email.com
+          format: email
+          type: string
+      type: object
+    updateUserProfile_200_response:
+      example:
+        data:
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+        success: true
+        message: Perfil atualizado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Perfil atualizado com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/getUserProfile_200_response_data'
+      type: object
+    changeUserPassword_request:
+      properties:
+        currentPassword:
+          example: "123456"
+          type: string
+        newPassword:
+          example: novaSenha123
+          minLength: 6
+          type: string
+      required:
+      - currentPassword
+      - newPassword
+      type: object
+    changeUserPassword_200_response:
+      example:
+        success: true
+        message: Senha alterada com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Senha alterada com sucesso
+          type: string
+      type: object
+    logoutUser_200_response:
+      example:
+        success: true
+        message: Logout realizado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Logout realizado com sucesso
+          type: string
+      type: object
+    getLeaderboard_200_response_data_leaderboard_inner:
+      example:
+        badges: 8
+        totalXP: 1450
+        currentStreak: 12
+        tasksCompleted: 87
+        level: 15
+        rank: 1
+        username: GamerPro123
+      properties:
+        rank:
+          example: 1
+          type: number
+        username:
+          example: GamerPro123
+          type: string
+        level:
+          example: 15
+          type: number
+        totalXP:
+          example: 1450
+          type: number
+        tasksCompleted:
+          example: 87
+          type: number
+        currentStreak:
+          example: 12
+          type: number
+        badges:
+          example: 8
+          type: number
+      type: object
+    getLeaderboard_200_response_data:
+      example:
+        leaderboard:
+        - badges: 8
+          totalXP: 1450
+          currentStreak: 12
+          tasksCompleted: 87
+          level: 15
+          rank: 1
+          username: GamerPro123
+        - badges: 8
+          totalXP: 1450
+          currentStreak: 12
+          tasksCompleted: 87
+          level: 15
+          rank: 1
+          username: GamerPro123
+        period: all
+        total: 10
+      properties:
+        leaderboard:
+          items:
+            $ref: '#/components/schemas/getLeaderboard_200_response_data_leaderboard_inner'
+          type: array
+        period:
+          example: all
+          type: string
+        total:
+          example: 10
+          type: number
+      type: object
+    getLeaderboard_200_response:
+      example:
+        data:
+          leaderboard:
+          - badges: 8
+            totalXP: 1450
+            currentStreak: 12
+            tasksCompleted: 87
+            level: 15
+            rank: 1
+            username: GamerPro123
+          - badges: 8
+            totalXP: 1450
+            currentStreak: 12
+            tasksCompleted: 87
+            level: 15
+            rank: 1
+            username: GamerPro123
+          period: all
+          total: 10
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getLeaderboard_200_response_data'
+      type: object
+    getGamificationDashboard_200_response_data_user:
+      example:
+        totalXP: 6.027456183070403
+        level: 0.8008281904610115
+        rank: 1.4658129805029452
+        username: username
+      properties:
+        username:
+          type: string
+        level:
+          type: number
+        totalXP:
+          type: number
+        rank:
+          type: number
+      type: object
+    getGamificationDashboard_200_response_data_stats:
+      example:
+        badges:
+        - badges
+        - badges
+        totalXP: 5.637376656633329
+        currentStreak: 7.061401241503109
+        tasksCompleted: 2.3021358869347655
+        level: 5.962133916683182
+        longestStreak: 9.301444243932576
+        nextLevel: "{}"
+      properties:
+        level:
+          type: number
+        totalXP:
+          type: number
+        tasksCompleted:
+          type: number
+        currentStreak:
+          type: number
+        longestStreak:
+          type: number
+        badges:
+          items:
+            description: TODO default missing array inner type to string
+            type: string
+          type: array
+        nextLevel:
+          type: object
+      type: object
+    getGamificationDashboard_200_response_data:
+      example:
+        stories: "{}"
+        stats:
+          badges:
+          - badges
+          - badges
+          totalXP: 5.637376656633329
+          currentStreak: 7.061401241503109
+          tasksCompleted: 2.3021358869347655
+          level: 5.962133916683182
+          longestStreak: 9.301444243932576
+          nextLevel: "{}"
+        recentAchievements:
+        - recentAchievements
+        - recentAchievements
+        user:
+          totalXP: 6.027456183070403
+          level: 0.8008281904610115
+          rank: 1.4658129805029452
+          username: username
+        activeStories:
+        - activeStories
+        - activeStories
+      properties:
+        user:
+          $ref: '#/components/schemas/getGamificationDashboard_200_response_data_user'
+        stats:
+          $ref: '#/components/schemas/getGamificationDashboard_200_response_data_stats'
+        stories:
+          type: object
+        recentAchievements:
+          items:
+            description: TODO default missing array inner type to string
+            type: string
+          type: array
+        activeStories:
+          items:
+            description: TODO default missing array inner type to string
+            type: string
+          type: array
+      type: object
+    getGamificationDashboard_200_response:
+      example:
+        data:
+          stories: "{}"
+          stats:
+            badges:
+            - badges
+            - badges
+            totalXP: 5.637376656633329
+            currentStreak: 7.061401241503109
+            tasksCompleted: 2.3021358869347655
+            level: 5.962133916683182
+            longestStreak: 9.301444243932576
+            nextLevel: "{}"
+          recentAchievements:
+          - recentAchievements
+          - recentAchievements
+          user:
+            totalXP: 6.027456183070403
+            level: 0.8008281904610115
+            rank: 1.4658129805029452
+            username: username
+          activeStories:
+          - activeStories
+          - activeStories
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getGamificationDashboard_200_response_data'
+      type: object
+    getBadges_200_response_data_earned_inner:
+      example:
+        earned: true
+        name: name
+        icon: icon
+        description: description
+        id: id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        earned:
+          type: boolean
+      type: object
+    getBadges_200_response_data:
+      example:
+        earned:
+        - earned: true
+          name: name
+          icon: icon
+          description: description
+          id: id
+        - earned: true
+          name: name
+          icon: icon
+          description: description
+          id: id
+        total: 0.8008281904610115
+        available:
+        - "{}"
+        - "{}"
+        earnedCount: 6.027456183070403
+      properties:
+        earned:
+          items:
+            $ref: '#/components/schemas/getBadges_200_response_data_earned_inner'
+          type: array
+        available:
+          items:
+            type: object
+          type: array
+        total:
+          type: number
+        earnedCount:
+          type: number
+      type: object
+    getBadges_200_response:
+      example:
+        data:
+          earned:
+          - earned: true
+            name: name
+            icon: icon
+            description: description
+            id: id
+          - earned: true
+            name: name
+            icon: icon
+            description: description
+            id: id
+          total: 0.8008281904610115
+          available:
+          - "{}"
+          - "{}"
+          earnedCount: 6.027456183070403
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getBadges_200_response_data'
+      type: object
+    updateGamificationPreferences_request:
+      properties:
+        class:
+          enum:
+          - Aventureiro
+          - Guerreiro
+          - Mago
+          - Ladino
+          - Paladino
+          - Explorador
+          example: Guerreiro
+          type: string
+        theme:
+          enum:
+          - medieval
+          - scifi
+          - modern
+          - fantasy
+          example: medieval
+          type: string
+        autoShare:
+          example: false
+          type: boolean
+        shareOnLevelUp:
+          example: true
+          type: boolean
+        shareOnBadge:
+          example: true
+          type: boolean
+      type: object
+    updateGamificationPreferences_200_response_data:
+      example:
+        preferences: "{}"
+      properties:
+        preferences:
+          type: object
+      type: object
+    updateGamificationPreferences_200_response:
+      example:
+        data:
+          preferences: "{}"
+        success: true
+        message: message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/updateGamificationPreferences_200_response_data'
+      type: object
+    shareMilestone_request_data:
+      properties:
+        level:
+          type: number
+        badge:
+          type: object
+        streak:
+          type: number
+        message:
+          type: string
+      type: object
+    shareMilestone_request:
+      properties:
+        type:
+          enum:
+          - level_up
+          - badge_earned
+          - streak_milestone
+          - custom
+          example: level_up
+          type: string
+        data:
+          $ref: '#/components/schemas/shareMilestone_request_data'
+      required:
+      - type
+      type: object
+    shareMilestone_200_response:
+      example:
+        data: "{}"
+        success: true
+        message: message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+      type: object
+    getGlobalStats_200_response_data_users:
+      example:
+        total: 0.8008281904610115
+        averageLevel: 6.027456183070403
+      properties:
+        total:
+          type: number
+        averageLevel:
+          type: number
+      type: object
+    getGlobalStats_200_response_data_gamification:
+      example:
+        totalXP: 1.4658129805029452
+        totalBadgesEarned: 5.637376656633329
+        totalTasksCompleted: 5.962133916683182
+        longestStreak: 2.3021358869347655
+      properties:
+        totalXP:
+          type: number
+        totalTasksCompleted:
+          type: number
+        totalBadgesEarned:
+          type: number
+        longestStreak:
+          type: number
+      type: object
+    getGlobalStats_200_response_data_stories:
+      example:
+        totalQuests: 9.301444243932576
+        completedStories: 3.616076749251911
+        totalStories: 7.061401241503109
+        completionRate: 2.027123023002322
+      properties:
+        totalStories:
+          type: number
+        totalQuests:
+          type: number
+        completedStories:
+          type: number
+        completionRate:
+          type: number
+      type: object
+    getGlobalStats_200_response_data:
+      example:
+        gamification:
+          totalXP: 1.4658129805029452
+          totalBadgesEarned: 5.637376656633329
+          totalTasksCompleted: 5.962133916683182
+          longestStreak: 2.3021358869347655
+        stories:
+          totalQuests: 9.301444243932576
+          completedStories: 3.616076749251911
+          totalStories: 7.061401241503109
+          completionRate: 2.027123023002322
+        users:
+          total: 0.8008281904610115
+          averageLevel: 6.027456183070403
+      properties:
+        users:
+          $ref: '#/components/schemas/getGlobalStats_200_response_data_users'
+        gamification:
+          $ref: '#/components/schemas/getGlobalStats_200_response_data_gamification'
+        stories:
+          $ref: '#/components/schemas/getGlobalStats_200_response_data_stories'
+      type: object
+    getGlobalStats_200_response:
+      example:
+        data:
+          gamification:
+            totalXP: 1.4658129805029452
+            totalBadgesEarned: 5.637376656633329
+            totalTasksCompleted: 5.962133916683182
+            longestStreak: 2.3021358869347655
+          stories:
+            totalQuests: 9.301444243932576
+            completedStories: 3.616076749251911
+            totalStories: 7.061401241503109
+            completionRate: 2.027123023002322
+          users:
+            total: 0.8008281904610115
+            averageLevel: 6.027456183070403
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getGlobalStats_200_response_data'
+      type: object
+    processShareWebhook_request:
+      properties:
+        event_type:
+          type: string
+        user_id:
+          type: string
+        data:
+          type: object
+      type: object
+    processShareWebhook_200_response:
+      example:
+        success: true
+        message: message
+        timestamp: timestamp
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        timestamp:
+          type: string
+      type: object
+    listTasks_200_response_data_pagination:
+      example:
+        current: 1
+        total: 50
+        pages: 5
+        limit: 10
+      properties:
+        current:
+          example: 1
+          type: integer
+        pages:
+          example: 5
+          type: integer
+        total:
+          example: 50
+          type: integer
+        limit:
+          example: 10
+          type: integer
+      type: object
+    listTasks_200_response_data:
+      example:
+        pagination:
+          current: 1
+          total: 50
+          pages: 5
+          limit: 10
+        tasks:
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+      properties:
+        tasks:
+          items:
+            $ref: '#/components/schemas/Task'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/listTasks_200_response_data_pagination'
+      type: object
+    listTasks_200_response:
+      example:
+        data:
+          pagination:
+            current: 1
+            total: 50
+            pages: 5
+            limit: 10
+          tasks:
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/listTasks_200_response_data'
+      type: object
+    createTask_request:
+      properties:
+        title:
+          example: Implementar autenticação JWT
+          maxLength: 100
+          minLength: 3
+          type: string
+        description:
+          example: Implementar sistema de autenticação usando JWT com middleware de
+            verificação
+          maxLength: 500
+          minLength: 10
+          type: string
+        status:
+          default: pending
+          enum:
+          - pending
+          - in_progress
+          - completed
+          example: pending
+          type: string
+        priority:
+          default: medium
+          enum:
+          - low
+          - medium
+          - high
+          example: high
+          type: string
+        dueDate:
+          example: 2024-12-31T23:59:59Z
+          format: date-time
+          type: string
+        tags:
+          example:
+          - backend
+          - auth
+          - jwt
+          items:
+            maxLength: 20
+            type: string
+          maxItems: 10
+          type: array
+      required:
+      - description
+      - title
+      type: object
+    createTask_201_response_data:
+      example:
+        task:
+          id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+      properties:
+        task:
+          $ref: '#/components/schemas/Task'
+      type: object
+    createTask_201_response:
+      example:
+        data:
+          task:
+            id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+        message: Tarefa criada com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Tarefa criada com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/createTask_201_response_data'
+      type: object
+    getTaskStats_200_response_data_stats:
+      example:
+        total: 25
+        in_progress: 8
+        overdue: 3
+        completedThisMonth: 5
+        pending: 10
+        completed: 7
+      properties:
+        total:
+          example: 25
+          type: integer
+        pending:
+          example: 10
+          type: integer
+        in_progress:
+          example: 8
+          type: integer
+        completed:
+          example: 7
+          type: integer
+        overdue:
+          example: 3
+          type: integer
+        completedThisMonth:
+          example: 5
+          type: integer
+      type: object
+    getTaskStats_200_response_data:
+      example:
+        stats:
+          total: 25
+          in_progress: 8
+          overdue: 3
+          completedThisMonth: 5
+          pending: 10
+          completed: 7
+        overdueTasks:
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+      properties:
+        stats:
+          $ref: '#/components/schemas/getTaskStats_200_response_data_stats'
+        overdueTasks:
+          items:
+            $ref: '#/components/schemas/Task'
+          type: array
+      type: object
+    getTaskStats_200_response:
+      example:
+        data:
+          stats:
+            total: 25
+            in_progress: 8
+            overdue: 3
+            completedThisMonth: 5
+            pending: 10
+            completed: 7
+          overdueTasks:
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getTaskStats_200_response_data'
+      type: object
+    listTasksByStatus_200_response_data_pagination:
+      example:
+        current: 0
+        total: 1
+        pages: 6
+        limit: 5
+      properties:
+        current:
+          type: integer
+        pages:
+          type: integer
+        total:
+          type: integer
+        limit:
+          type: integer
+      type: object
+    listTasksByStatus_200_response_data:
+      example:
+        pagination:
+          current: 0
+          total: 1
+          pages: 6
+          limit: 5
+        tasks:
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+        - id: 64a1b2c3d4e5f6789abcdef1
+          title: Implementar Story-Mode
+          priority: low
+          userId: 64a1b2c3d4e5f6789abcdef0
+          status: pending
+      properties:
+        tasks:
+          items:
+            $ref: '#/components/schemas/Task'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/listTasksByStatus_200_response_data_pagination'
+      type: object
+    listTasksByStatus_200_response:
+      example:
+        data:
+          pagination:
+            current: 0
+            total: 1
+            pages: 6
+            limit: 5
+          tasks:
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+          - id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/listTasksByStatus_200_response_data'
+      type: object
+    getTaskById_200_response:
+      example:
+        data:
+          task:
+            id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/createTask_201_response_data'
+      type: object
+    updateTask_request:
+      minProperties: 1
+      properties:
+        title:
+          example: Implementar autenticação JWT - Atualizado
+          maxLength: 100
+          minLength: 3
+          type: string
+        description:
+          example: Implementar sistema de autenticação usando JWT com middleware de
+            verificação e refresh tokens
+          maxLength: 500
+          minLength: 10
+          type: string
+        status:
+          enum:
+          - pending
+          - in_progress
+          - completed
+          example: in_progress
+          type: string
+        priority:
+          enum:
+          - low
+          - medium
+          - high
+          example: high
+          type: string
+        dueDate:
+          example: 2024-12-31T23:59:59Z
+          format: date-time
+          nullable: true
+          type: string
+        tags:
+          example:
+          - backend
+          - auth
+          - jwt
+          - security
+          items:
+            maxLength: 20
+            type: string
+          maxItems: 10
+          type: array
+      type: object
+    updateTask_200_response:
+      example:
+        data:
+          task:
+            id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+        message: Tarefa atualizada com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Tarefa atualizada com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/createTask_201_response_data'
+      type: object
+    deleteTask_200_response:
+      example:
+        success: true
+        message: Tarefa deletada com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Tarefa deletada com sucesso
+          type: string
+      type: object
+    completeTask_200_response:
+      example:
+        data:
+          task:
+            id: 64a1b2c3d4e5f6789abcdef1
+            title: Implementar Story-Mode
+            priority: low
+            userId: 64a1b2c3d4e5f6789abcdef0
+            status: pending
+        success: true
+        message: Tarefa marcada como concluída
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Tarefa marcada como concluída
+          type: string
+        data:
+          $ref: '#/components/schemas/createTask_201_response_data'
+      type: object
+    createStoryFromTasks_request_userPreferences:
+      properties:
+        theme:
+          enum:
+          - medieval
+          - scifi
+          - modern
+          - fantasy
+          example: medieval
+          type: string
+        class:
+          enum:
+          - Aventureiro
+          - Guerreiro
+          - Mago
+          - Ladino
+          - Paladino
+          - Explorador
+          example: Guerreiro
+          type: string
+      type: object
+    createStoryFromTasks_request:
+      properties:
+        taskIds:
+          example:
+          - 64a1b2c3d4e5f6789abcdef0
+          - 64a1b2c3d4e5f6789abcdef1
+          items:
+            type: string
+          maxItems: 10
+          minItems: 1
+          type: array
+        userPreferences:
+          $ref: '#/components/schemas/createStoryFromTasks_request_userPreferences'
+      required:
+      - taskIds
+      type: object
+    createStoryFromTasks_201_response_data_story:
+      example:
+        totalXP: 0.8008281904610115
+        estimatedPlayTime: estimatedPlayTime
+        theme: theme
+        id: id
+        title: title
+        story: story
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        story:
+          type: string
+        theme:
+          type: string
+        totalXP:
+          type: number
+        estimatedPlayTime:
+          type: string
+      type: object
+    createStoryFromTasks_201_response_data_quests_inner:
+      example:
+        difficulty: difficulty
+        xp: 6.027456183070403
+        category: category
+        questTitle: questTitle
+        questDescription: questDescription
+      properties:
+        questTitle:
+          type: string
+        questDescription:
+          type: string
+        difficulty:
+          type: string
+        xp:
+          type: number
+        category:
+          type: string
+      type: object
+    createStoryFromTasks_201_response_data:
+      example:
+        quests:
+        - difficulty: difficulty
+          xp: 6.027456183070403
+          category: category
+          questTitle: questTitle
+          questDescription: questDescription
+        - difficulty: difficulty
+          xp: 6.027456183070403
+          category: category
+          questTitle: questTitle
+          questDescription: questDescription
+        story:
+          totalXP: 0.8008281904610115
+          estimatedPlayTime: estimatedPlayTime
+          theme: theme
+          id: id
+          title: title
+          story: story
+      properties:
+        story:
+          $ref: '#/components/schemas/createStoryFromTasks_201_response_data_story'
+        quests:
+          items:
+            $ref: '#/components/schemas/createStoryFromTasks_201_response_data_quests_inner'
+          type: array
+      type: object
+    createStoryFromTasks_201_response:
+      example:
+        data:
+          quests:
+          - difficulty: difficulty
+            xp: 6.027456183070403
+            category: category
+            questTitle: questTitle
+            questDescription: questDescription
+          - difficulty: difficulty
+            xp: 6.027456183070403
+            category: category
+            questTitle: questTitle
+            questDescription: questDescription
+          story:
+            totalXP: 0.8008281904610115
+            estimatedPlayTime: estimatedPlayTime
+            theme: theme
+            id: id
+            title: title
+            story: story
+        success: true
+        message: História épica gerada com sucesso!
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: História épica gerada com sucesso!
+          type: string
+        data:
+          $ref: '#/components/schemas/createStoryFromTasks_201_response_data'
+      type: object
+    completeQuest_request:
+      properties:
+        completionTime:
+          description: Tempo gasto em minutos
+          example: 45
+          type: number
+      type: object
+    completeQuest_200_response_data_task:
+      example:
+        id: id
+        title: title
+        questTitle: questTitle
+        xpEarned: 0.8008281904610115
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        questTitle:
+          type: string
+        xpEarned:
+          type: number
+      type: object
+    completeQuest_200_response_data_gamification:
+      example:
+        xpGained: 6.027456183070403
+        leveledUp: true
+        totalXP: 5.962133916683182
+        currentStreak: 5.637376656633329
+        newLevel: 1.4658129805029452
+        newBadges:
+        - newBadges
+        - newBadges
+      properties:
+        xpGained:
+          type: number
+        leveledUp:
+          type: boolean
+        newLevel:
+          type: number
+        newBadges:
+          items:
+            description: TODO default missing array inner type to string
+            type: string
+          type: array
+        totalXP:
+          type: number
+        currentStreak:
+          type: number
+      type: object
+    completeQuest_200_response_data:
+      example:
+        gamification:
+          xpGained: 6.027456183070403
+          leveledUp: true
+          totalXP: 5.962133916683182
+          currentStreak: 5.637376656633329
+          newLevel: 1.4658129805029452
+          newBadges:
+          - newBadges
+          - newBadges
+        task:
+          id: id
+          title: title
+          questTitle: questTitle
+          xpEarned: 0.8008281904610115
+      properties:
+        task:
+          $ref: '#/components/schemas/completeQuest_200_response_data_task'
+        gamification:
+          $ref: '#/components/schemas/completeQuest_200_response_data_gamification'
+      type: object
+    completeQuest_200_response:
+      example:
+        data:
+          gamification:
+            xpGained: 6.027456183070403
+            leveledUp: true
+            totalXP: 5.962133916683182
+            currentStreak: 5.637376656633329
+            newLevel: 1.4658129805029452
+            newBadges:
+            - newBadges
+            - newBadges
+          task:
+            id: id
+            title: title
+            questTitle: questTitle
+            xpEarned: 0.8008281904610115
+        success: true
+        message: Quest completada! +25 XP
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Quest completada! +25 XP
+          type: string
+        data:
+          $ref: '#/components/schemas/completeQuest_200_response_data'
+      type: object
+    listStories_200_response_data:
+      example:
+        stories:
+        - progress: 50
+          theme: medieval
+          id: 64a1b2c3d4e5f6789abcdef2
+          title: A Batalha contra o Bug Monstruoso
+          story: "Nas profundezas do código, um bug terrível despertou..."
+        - progress: 50
+          theme: medieval
+          id: 64a1b2c3d4e5f6789abcdef2
+          title: A Batalha contra o Bug Monstruoso
+          story: "Nas profundezas do código, um bug terrível despertou..."
+        pagination: "{}"
+      properties:
+        stories:
+          items:
+            $ref: '#/components/schemas/Story'
+          type: array
+        pagination:
+          type: object
+      type: object
+    listStories_200_response:
+      example:
+        data:
+          stories:
+          - progress: 50
+            theme: medieval
+            id: 64a1b2c3d4e5f6789abcdef2
+            title: A Batalha contra o Bug Monstruoso
+            story: "Nas profundezas do código, um bug terrível despertou..."
+          - progress: 50
+            theme: medieval
+            id: 64a1b2c3d4e5f6789abcdef2
+            title: A Batalha contra o Bug Monstruoso
+            story: "Nas profundezas do código, um bug terrível despertou..."
+          pagination: "{}"
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/listStories_200_response_data'
+      type: object
+    getStoryById_200_response_data:
+      example:
+        story:
+          progress: 50
+          theme: medieval
+          id: 64a1b2c3d4e5f6789abcdef2
+          title: A Batalha contra o Bug Monstruoso
+          story: "Nas profundezas do código, um bug terrível despertou..."
+      properties:
+        story:
+          $ref: '#/components/schemas/Story'
+      type: object
+    getStoryById_200_response:
+      example:
+        data:
+          story:
+            progress: 50
+            theme: medieval
+            id: 64a1b2c3d4e5f6789abcdef2
+            title: A Batalha contra o Bug Monstruoso
+            story: "Nas profundezas do código, um bug terrível despertou..."
+        success: true
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getStoryById_200_response_data'
+      type: object
+    getUserStats_200_response_data_users:
+      example:
+        total: 150
+        inactive: 10
+        active: 140
+        admins: 5
+      properties:
+        total:
+          example: 150
+          type: integer
+        active:
+          example: 140
+          type: integer
+        inactive:
+          example: 10
+          type: integer
+        admins:
+          example: 5
+          type: integer
+      type: object
+    getUserStats_200_response_data_tasks:
+      example:
+        total: 1250
+        inProgress: 150
+        overdue: 45
+        pending: 300
+        completed: 800
+      properties:
+        total:
+          example: 1250
+          type: integer
+        completed:
+          example: 800
+          type: integer
+        pending:
+          example: 300
+          type: integer
+        inProgress:
+          example: 150
+          type: integer
+        overdue:
+          example: 45
+          type: integer
+      type: object
+    getUserStats_200_response_data_mostActiveUsers_inner:
+      example:
+        taskCount: 0
+        name: name
+        userId: userId
+        email: email
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        taskCount:
+          type: integer
+      type: object
+    getUserStats_200_response_data:
+      example:
+        mostActiveUsers:
+        - taskCount: 0
+          name: name
+          userId: userId
+          email: email
+        - taskCount: 0
+          name: name
+          userId: userId
+          email: email
+        users:
+          total: 150
+          inactive: 10
+          active: 140
+          admins: 5
+        tasks:
+          total: 1250
+          inProgress: 150
+          overdue: 45
+          pending: 300
+          completed: 800
+      properties:
+        users:
+          $ref: '#/components/schemas/getUserStats_200_response_data_users'
+        tasks:
+          $ref: '#/components/schemas/getUserStats_200_response_data_tasks'
+        mostActiveUsers:
+          items:
+            $ref: '#/components/schemas/getUserStats_200_response_data_mostActiveUsers_inner'
+          type: array
+      type: object
+    getUserStats_200_response:
+      example:
+        data:
+          mostActiveUsers:
+          - taskCount: 0
+            name: name
+            userId: userId
+            email: email
+          - taskCount: 0
+            name: name
+            userId: userId
+            email: email
+          users:
+            total: 150
+            inactive: 10
+            active: 140
+            admins: 5
+          tasks:
+            total: 1250
+            inProgress: 150
+            overdue: 45
+            pending: 300
+            completed: 800
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getUserStats_200_response_data'
+      type: object
+    getAllUsers_200_response_data_pagination:
+      example:
+        current: 1
+        total: 150
+        pages: 15
+        limit: 10
+      properties:
+        current:
+          example: 1
+          type: integer
+        pages:
+          example: 15
+          type: integer
+        total:
+          example: 150
+          type: integer
+        limit:
+          example: 10
+          type: integer
+      type: object
+    getAllUsers_200_response_data:
+      example:
+        pagination:
+          current: 1
+          total: 150
+          pages: 15
+          limit: 10
+        users:
+        - gamification:
+            totalXP: 450
+            level: 5
+          lastLogin: 2000-01-23T04:56:07.000+00:00
+          role: user
+          name: Yuri Dev
+          id: 64a1b2c3d4e5f6789abcdef0
+          isActive: true
+          email: yuri.dev@example.com
+        - gamification:
+            totalXP: 450
+            level: 5
+          lastLogin: 2000-01-23T04:56:07.000+00:00
+          role: user
+          name: Yuri Dev
+          id: 64a1b2c3d4e5f6789abcdef0
+          isActive: true
+          email: yuri.dev@example.com
+      properties:
+        users:
+          items:
+            $ref: '#/components/schemas/User'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/getAllUsers_200_response_data_pagination'
+      type: object
+    getAllUsers_200_response:
+      example:
+        data:
+          pagination:
+            current: 1
+            total: 150
+            pages: 15
+            limit: 10
+          users:
+          - gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+          - gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getAllUsers_200_response_data'
+      type: object
+    getUserById_200_response_data_taskStats:
+      example:
+        total: 0
+        in_progress: 1
+        pending: 6
+        completed: 5
+      properties:
+        total:
+          type: integer
+        pending:
+          type: integer
+        in_progress:
+          type: integer
+        completed:
+          type: integer
+      type: object
+    getUserById_200_response_data:
+      example:
+        taskStats:
+          total: 0
+          in_progress: 1
+          pending: 6
+          completed: 5
+        user:
+          gamification:
+            totalXP: 450
+            level: 5
+          lastLogin: 2000-01-23T04:56:07.000+00:00
+          role: user
+          name: Yuri Dev
+          id: 64a1b2c3d4e5f6789abcdef0
+          isActive: true
+          email: yuri.dev@example.com
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        taskStats:
+          $ref: '#/components/schemas/getUserById_200_response_data_taskStats'
+      type: object
+    getUserById_200_response:
+      example:
+        data:
+          taskStats:
+            total: 0
+            in_progress: 1
+            pending: 6
+            completed: 5
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+        success: true
+      properties:
+        success:
+          example: true
+          type: boolean
+        data:
+          $ref: '#/components/schemas/getUserById_200_response_data'
+      type: object
+    updateUser_request:
+      properties:
+        name:
+          example: João Silva Santos
+          maxLength: 50
+          minLength: 2
+          type: string
+        email:
+          example: joao.santos@email.com
+          format: email
+          type: string
+        role:
+          enum:
+          - user
+          - admin
+          example: user
+          type: string
+        isActive:
+          example: true
+          type: boolean
+      type: object
+    updateUser_200_response:
+      example:
+        data:
+          user:
+            gamification:
+              totalXP: 450
+              level: 5
+            lastLogin: 2000-01-23T04:56:07.000+00:00
+            role: user
+            name: Yuri Dev
+            id: 64a1b2c3d4e5f6789abcdef0
+            isActive: true
+            email: yuri.dev@example.com
+        success: true
+        message: Usuário atualizado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Usuário atualizado com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/getUserProfile_200_response_data'
+      type: object
+    deleteUser_200_response:
+      example:
+        success: true
+        message: Usuário e suas tarefas foram deletados com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Usuário e suas tarefas foram deletados com sucesso
+          type: string
+      type: object
+    toggleUserStatus_200_response_data_user:
+      example:
+        name: name
+        id: id
+        isActive: true
+        email: email
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        isActive:
+          type: boolean
+      type: object
+    toggleUserStatus_200_response_data:
+      example:
+        user:
+          name: name
+          id: id
+          isActive: true
+          email: email
+      properties:
+        user:
+          $ref: '#/components/schemas/toggleUserStatus_200_response_data_user'
+      type: object
+    toggleUserStatus_200_response:
+      example:
+        data:
+          user:
+            name: name
+            id: id
+            isActive: true
+            email: email
+        success: true
+        message: Usuário ativado com sucesso
+      properties:
+        success:
+          example: true
+          type: boolean
+        message:
+          example: Usuário ativado com sucesso
+          type: string
+        data:
+          $ref: '#/components/schemas/toggleUserStatus_200_response_data'
+      type: object
+    User_gamification:
+      example:
+        totalXP: 450
+        level: 5
+      properties:
+        level:
+          example: 5
+          type: number
+        totalXP:
+          example: 450
+          type: number
+      type: object
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

@@ -1,0 +1,30 @@
+# ListTasks200Response
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**success** | **bool** |  | [optional] 
+**data** | [**ListTasks200ResponseData**](ListTasks200ResponseData.md) |  | [optional] 
+
+## Example
+
+```python
+from openapi_client.models.list_tasks200_response import ListTasks200Response
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of ListTasks200Response from a JSON string
+list_tasks200_response_instance = ListTasks200Response.from_json(json)
+# print the JSON string representation of the object
+print(ListTasks200Response.to_json())
+
+# convert the object into a dict
+list_tasks200_response_dict = list_tasks200_response_instance.to_dict()
+# create an instance of ListTasks200Response from a dict
+list_tasks200_response_from_dict = ListTasks200Response.from_dict(list_tasks200_response_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+
