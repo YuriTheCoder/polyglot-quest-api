@@ -8,7 +8,7 @@ on:
 
 jobs:
   generate-sdks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     strategy:
       matrix:
@@ -51,7 +51,7 @@ jobs:
         override: true
     
     - name: Setup Swift
-      uses: swift-actions/setup-swift@v1
+      uses: swift-actions/setup-swift@v2
       with:
         swift-version: '5.9'
     
